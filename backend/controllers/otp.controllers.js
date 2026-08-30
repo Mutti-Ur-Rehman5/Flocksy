@@ -8,6 +8,9 @@ const OTP_EXPIRY_MS=10*60*1000
 const MAX_ATTEMPTS=3
 
 const generateApprovalToken=(otpRecordId)=>{
+    if(!process.env.APPROVAL_TOKEN_SECRET){
+        throw new Error("OTP service not configured: APPROVAL_TOKEN_SECRET is missing")
+    }
     return jwt.sign({id:otpRecordId},process.env.APPROVAL_TOKEN_SECRET,{expiresIn:"10m"})
 }
 
@@ -50,7 +53,16 @@ export const requestOtp=async (req,res)=>{
         const approveUrl=`${getBaseUrl()}/api/otp/approve?token=${approvalToken}`
         const denyUrl=`${getBaseUrl()}/api/otp/deny?token=${approvalToken}`
 
-        await sendOtpEmail(user.parentEmail,otpCode,approveUrl,denyUrl,user.name)
+        if(!process.env.EMAIL||!process.env.EMAIL_PASS){
+            return res.status(500).json({message:"OTP service not configured: EMAIL or EMAIL_PASS is missing on the server"})
+        }
+
+        try {
+            await sendOtpEmail(user.parentEmail,otpCode,approveUrl,denyUrl,user.name)
+        } catch (emailError) {
+            await OTPRecord.deleteOne({_id:otpRecord._id})
+            return res.status(500).json({message:"OTP could not be sent. Check the email configuration (EMAIL/EMAIL_PASS) on the server."})
+        }
 
         return res.status(200).json({
             message:"otp sent to parent email",
