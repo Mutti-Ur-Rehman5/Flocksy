@@ -8,6 +8,7 @@ import { ClipLoader } from "react-spinners";
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setUserData } from '../redux/userSlice';
+import { setToken } from '../auth';
 
 function SignIn() {
   const [inputClicked,setInputClicked]=useState({userName:false,password:false})
@@ -25,6 +26,7 @@ function SignIn() {
     setErr("")
     try{
       const result=await axios.post(`${serverUrl}/api/auth/signin`,{userName,password},{withCredentials:true})
+      setToken(result.data.token)
       dispatch(setUserData(result.data))
       if(result.data.role==="CHILD"){
         navigate("/kids")

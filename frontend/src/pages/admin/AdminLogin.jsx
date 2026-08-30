@@ -8,6 +8,7 @@ import { ClipLoader } from "react-spinners";
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setUserData } from '../../redux/userSlice';
+import { setToken } from '../../auth';
 
 function AdminLogin() {
   const [inputClicked,setInputClicked]=useState({email:false,password:false})
@@ -25,6 +26,7 @@ function AdminLogin() {
     setErr("")
     try{
       const result=await axios.post(`${serverUrl}/api/admin/auth/login`,{email,password},{withCredentials:true})
+      setToken(result.data.token)
       dispatch(setUserData(result.data))
       navigate("/admin")
       setLoading(false)

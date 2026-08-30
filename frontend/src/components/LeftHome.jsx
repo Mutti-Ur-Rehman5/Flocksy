@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import { serverUrl } from '../App';
 import { setUserData } from '../redux/userSlice';
+import { clearToken } from '../auth';
 import OtherUser from './OtherUser';
 import Notifications from '../pages/Notifications';
 function LeftHome() {
@@ -17,6 +18,7 @@ const {notificationData}=useSelector(state=>state.user)
     const handleLogOut=async ()=>{
         try {
             const result=await axios.get(`${serverUrl}/api/auth/signout`,{withCredentials:true})
+            clearToken()
             dispatch(setUserData(null))
         } catch (error) {
             console.log(error)

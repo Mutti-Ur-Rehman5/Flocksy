@@ -4,6 +4,7 @@ import { serverUrl } from '../App'
 import { UNSAFE_createClientRoutesWithHMRRevalidationOptOut, useNavigate, useParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { setProfileData, setUserData } from '../redux/userSlice'
+import { clearToken } from '../auth'
 import { useEffect } from 'react'
 import { MdOutlineKeyboardBackspace } from "react-icons/md";
 import dp from "../assets/dp.webp"
@@ -32,6 +33,7 @@ function Profile() {
     const handleLogOut = async () => {
         try {
             const result = await axios.get(`${serverUrl}/api/auth/signout`, { withCredentials: true })
+            clearToken()
             dispatch(setUserData(null))
         } catch (error) {
             console.log(error)

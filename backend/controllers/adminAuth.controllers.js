@@ -37,7 +37,8 @@ export const adminLogin=async (req,res)=>{
             email:user.email,
             profileImage:user.profileImage,
             role:user.role,
-            isVerified:user.isVerified
+            isVerified:user.isVerified,
+            token
         })
     } catch (error) {
         return res.status(500).json({message:`admin login error ${error}`})

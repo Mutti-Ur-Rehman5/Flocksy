@@ -2,7 +2,10 @@
  import User from "../models/user.model.js"
  const isAuth=async (req,res,next)=>{
     try {
-        const token=req.cookies.token
+        // Token from Authorization: Bearer header (cross-origin SPA) OR httpOnly cookie (local dev)
+        const authHeader=req.headers.authorization
+        const bearerToken=authHeader&&authHeader.startsWith("Bearer ")?authHeader.slice(7):null
+        const token=bearerToken || req.cookies.token
         if(!token){
             return res.status(400).json({message:"token is not found"})
         }

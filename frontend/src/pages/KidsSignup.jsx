@@ -8,6 +8,7 @@ import { ClipLoader } from "react-spinners";
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setUserData } from '../redux/userSlice';
+import { setToken } from '../auth';
 
 function KidsSignup() {
   const [inputClicked,setInputClicked]=useState({
@@ -41,6 +42,7 @@ function KidsSignup() {
         {withCredentials:true}
       )
       dispatch(setUserData(result.data))
+      setToken(result.data.token)
       navigate("/kids")
       setLoading(false)
     } catch (error) {
