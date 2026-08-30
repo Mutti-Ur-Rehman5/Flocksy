@@ -1,5 +1,6 @@
 import sendMail from "../config/Mail.js"
 import genToken from "../config/token.js"
+import { cookieOptions } from "../config/cookie.js"
 import User from "../models/user.model.js"
 import KidsProfile from "../models/kidsProfile.model.js"
 import bcrypt from "bcryptjs"
@@ -30,12 +31,7 @@ export const signUp=async (req,res)=>{
 
         const token=await genToken(user._id)
 
-        res.cookie("token",token,{
-            httpOnly:true,
-            maxAge:10*365*24*60*60*1000,
-            secure:false,
-            sameSite:"Strict"
-        })
+        res.cookie("token",token,cookieOptions())
 
         return res.status(201).json(user)
 
@@ -65,12 +61,7 @@ export const signIn=async (req,res)=>{
 
         const token=await genToken(user._id)
 
-        res.cookie("token",token,{
-            httpOnly:true,
-            maxAge:10*365*24*60*60*1000,
-            secure:false,
-            sameSite:"Strict"
-        })
+        res.cookie("token",token,cookieOptions())
 
         return res.status(200).json({
             _id:user._id,
@@ -213,12 +204,7 @@ export const signUpChild=async (req,res)=>{
 
         const token=await genToken(user._id)
 
-        res.cookie("token",token,{
-            httpOnly:true,
-            maxAge:10*365*24*60*60*1000,
-            secure:false,
-            sameSite:"Strict"
-        })
+        res.cookie("token",token,cookieOptions())
 
         const userObj=user.toObject()
         delete userObj.parentEmail

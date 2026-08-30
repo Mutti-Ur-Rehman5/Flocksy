@@ -228,10 +228,10 @@ New variables needed for Kids Mode work (add to `.env`, placeholder in `.env.exa
 - Foundings recorded above in "Current Phase / Status". Next: complete Phase 0 setup (.env.example, root .gitignore) then await user go-ahead for Phase 1.
 - What's next: User go-ahead â†’ Phase 0 setup tasks â†’ Phase 1 data layer.
 
-### 2026-08-27 — Admin Portal (Backend + Frontend)
+### 2026-08-27 ï¿½ Admin Portal (Backend + Frontend)
 - Added isActive (default:true) + index to user.model.js. isAuth fetches user & returns 403 if isActive===false; equireRole also checks isActive. uth.controllers.js signIn rejects deactivated accounts (403). Verified: deactivated jojo2 blocked at login (403), reactivation restores login (200).
 - Created ModerationLog model (action enum FLAGGED/ALLOWED/REJECTED/RESTORED/DELETED/OVERTURNED; flaggedBy AI/MANUAL/ADMIN) and BadgeDefinition model (unique badgeId, name, starsRequired, icon, description, isActive).
-- Dedicated admin login: POST /api/admin/auth/login (adminAuth.controllers) — ADMIN-only, generic 403 on any failure (no account/role/credential leak), sets JWT cookie, returns sanitized user. Mounted at /api/admin/auth.
+- Dedicated admin login: POST /api/admin/auth/login (adminAuth.controllers) ï¿½ ADMIN-only, generic 403 on any failure (no account/role/credential leak), sets JWT cookie, returns sanitized user. Mounted at /api/admin/auth.
 - Admin management (adminManagement.controllers/routes) under /api/admin/mgmt, guarded [isAuth, requireRole("ADMIN")]: list/search/filter users, get user (admin-only parentEmail + kidsData), toggle-active (can't toggle admins), delete user (cascades), force-reset password, adult-content list (post/loop/story/comment) + delete (writes ModerationLog), moderation log, child chat history, badge CRUD, analytics. Verified end-to-end via curl; child token hitting admin endpoints ? 403.
 - CLI seed: ackend/scripts/seedAdmin.js (idempotent; 
 pm run seed:admin) also seeds 6 default badges (newcomer 0, story_lover 10, quiz_whiz 25, artist 40, champion 60, superstar 100).
@@ -239,7 +239,7 @@ pm run seed:admin) also seeds 6 default badges (newcomer 0, story_lover 10, quiz
 - Admin account: admin@flocksy.com / Admin@123456 / flock?admin. Login http://localhost:5173/admin/login.
 - Fixed post.controllers.js saved() which returned the raw populated user (leaking parentEmail to adults): now strips parentEmail/parentName while keeping the full user shape (frontend setUserData requires the whole object).
 - Fixed dminGetChildChatHistory to read page/limit from eq.query (was destructuring from eq.params).
-- Security: MONGODB_URL, Gmail app password, and JWT_SECRET were visible in session logs — rotation recommended (not yet confirmed done).
+- Security: MONGODB_URL, Gmail app password, and JWT_SECRET were visible in session logs ï¿½ rotation recommended (not yet confirmed done).
 - Note: analytics ctiveToday/dailyActives are 0 because lastLoginAt does not exist on User (acceptable placeholder).
 
 ### 2026-08-28 CREDENTIALS (all verified live)
@@ -296,3 +296,10 @@ pm run seed:admin) also seeds 6 default badges (newcomer 0, story_lover 10, quiz
 - 2026-08-29: Added GET /api/health (backend/index.js, BEFORE all /api router mounts, no auth/no DB/no external) -> {status,uptime,timestamp} for Render free-tier keep-alive + external uptime pinger. Verified: 200, instant, sign-in unaffected.
 
 - 2026-08-29: FIX adult sign-in by email + default role. Root cause: /api/auth/signin only matched User.findOne({userName}), so logging in with email (muttiu608@gmail.com) returned "User not found". Legacy adults (Mutti, Sufi1, Ab23, khurram2001, Faizan, Sufi12) have NO role field. Changes (backend/controllers/auth.controllers.js signIn): lookup by identifier against {userName} OR {email} (identifier = email||userName since form sends one field); response now returns role: user.role || "ADULT" so legacy adults get adult UI (Nav role==="ADULT" gates adult nav + chat widget). Also updated frontend SignIn.jsx label "Enter Username" -> "Enter Email or Username". Verified: both email & username now find the user (returns "Incorrect Password" not "User not found"). Session persisted via httpOnly cookie + getCurrentUser re-fetch; userSlice has no localStorage persistence (by design).
+
+### 2026-08-30 - DB WIPE + fresh admin + GitHub push
+- **DB fully wiped** (user-confirmed): all 19 collections in `mydatabase` dropped (users 0, posts 0, stories 0, loops 0). Atlas free tier blocks dropDatabase so per-collection drop() was used. Quiz questions + true-false questions also wiped -> ONLY re-populated via admin panel (`POST /api/admin/quiz`, `adminCreateQuizQuestion` admin.controllers.js:237). No seed script exists for those.
+- **Fresh admin seeded** via `npm run seed:admin`: email `muttiu608@gmail.com`, password `12345678`, username `flocksyadmin`, name `Admin`, role ADMIN; 6 default badges (Newcomer/Story Lover/Quiz Whiz/Artist/Champion/Superstar). Login verified: POST /api/auth/signin -> 200 role=ADMIN. backend/.env admin vars updated to match (ADMIN_EMAIL/PASSWORD/NAME). GEMINI_API_KEY + DB config untouched.
+- Root README.md created (concise full-stack overview) so `git add README.md` works (only frontend/README.md Vite boilerplate existed).
+- **Git repo initialized + pushed to GitHub**: `git init` in `D:\6.vybe\6.vybe`, `git add .` (159 files), commit `60d4f78` "first commit", `git branch -M main`, `git remote add origin https://github.com/Mutti-Ur-Rehman5/Flocksy.git`, `git push -u origin main` -> `[new branch] main`. Verified clean: `backend/.env` (real secrets) + node_modules + logs NOT staged (`git check-ignore backend/.env` confirmed); `.env.example` tracked (safe template). Push auth succeeded non-interactively.
+- Remaining carryover: 15-item admin->user propagation verification table still to be compiled into memory.md (draft: 1-6 PASS, 7 FAIL hardcoded animals/TF, 8 FAIL hardcoded BADGE_THRESHOLDS, 9 FAIL Redux cache, 10 FAIL no moderation field/endpoint, 11 PASS deactivate-block, 12 PASS cascade/FAIL immediate visibility, 12-15 pending). Also optional: clear verifyadult adult-chat test history.
