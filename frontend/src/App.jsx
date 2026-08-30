@@ -93,7 +93,7 @@ socket?.on("newNotification",(noti)=>{
     <Routes>
       <Route path='/signup' element={!userData?<SignUp/>:<Navigate to={"/"}/>}/>
        <Route path='/signin' element={!userData?<SignIn/>:<Navigate to={"/"}/>}/>
-        <Route path='/' element={<Navigate to={"/signin"}/>}/>
+        <Route path='/' element={!userData?<Navigate to={"/signin"}/>:userData.role==="ADMIN"?<Navigate to={"/admin"}/>:userData.role==="CHILD"?<Navigate to={"/kids"}/>:<Home/>}/>
        <Route path='/forgot-password' element={!userData?<ForgotPassword/>:<Navigate to={"/"}/>}/>
         <Route path='/kids-signup' element={!userData?<KidsSignup/>:(userData.role==="CHILD"?<Navigate to={"/kids"}/>:<Navigate to={"/"}/>)}/>
         <Route path='/kids/login' element={!userData?<KidsLogin/>:(userData.role==="CHILD"?<Navigate to={"/kids"}/>:<Navigate to={"/"}/>)}/>
