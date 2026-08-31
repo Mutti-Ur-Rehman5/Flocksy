@@ -11,6 +11,24 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// TEMP DIAGNOSTIC: capture non-sensitive Nodemailer/SMTP error fields only.
+// Never logs the password, token, or auth object.
+const safeErr=(err)=>{
+    const s=(v)=> (typeof v==="string"?v.slice(0,500):v)
+    return {
+        name: err && err.name,
+        message: s(err && err.message),
+        code: s(err && err.code),
+        responseCode: s(err && err.responseCode),
+        command: s(err && err.command),
+        response: s(err && err.response),
+    }
+}
+
+const logNodemailerFailure=(context,error)=>{
+    console.error(`[Mail] ${context} failed:`, JSON.stringify(safeErr(error)))
+}
+
 const sendMail=async (to,otp)=>{
 await transporter.sendMail({
     from:`${process.env.EMAIL}`,
@@ -21,6 +39,7 @@ await transporter.sendMail({
 }
 
 const sendOtpEmail=async (to,otpCode,approveUrl,denyUrl,childName)=>{
+try {
 await transporter.sendMail({
     from:`${process.env.EMAIL}`,
     to,
@@ -46,6 +65,12 @@ await transporter.sendMail({
         </div>
     `
 })
+} catch (error) {
+    // TEMP DIAGNOSTIC: log the real, non-sensitive SMTP/Nodemailer failure.
+    const recipientProvided = typeof to === "string" ? to.slice(0,4)+"..." : "(none)"
+    console.error(`[Mail] sendOtpEmail transport error (to=${recipientProvided}):`, JSON.stringify(safeErr(error)))
+    throw error
+}
 }
 
-export { sendMail as default, sendOtpEmail }
+export { sendMail as default, sendOtpEmail, safeErr }

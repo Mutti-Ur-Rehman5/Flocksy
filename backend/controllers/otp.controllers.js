@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import User from "../models/user.model.js"
 import OTPRecord from "../models/otpRecord.model.js"
-import { sendOtpEmail } from "../config/Mail.js"
+import { sendOtpEmail, safeErr } from "../config/Mail.js"
 
 const OTP_EXPIRY_MS=10*60*1000
 const MAX_ATTEMPTS=3
@@ -60,6 +60,8 @@ export const requestOtp=async (req,res)=>{
         try {
             await sendOtpEmail(user.parentEmail,otpCode,approveUrl,denyUrl,user.name)
         } catch (emailError) {
+            // TEMP DIAGNOSTIC: log the real, non-sensitive Nodemailer failure. HTTP response is unchanged.
+            console.error("[OTP] requestOtp email-send failure:", JSON.stringify(safeErr(emailError)))
             await OTPRecord.deleteOne({_id:otpRecord._id})
             return res.status(500).json({message:"OTP could not be sent. Check the email configuration (EMAIL/EMAIL_PASS) on the server."})
         }
@@ -70,6 +72,8 @@ export const requestOtp=async (req,res)=>{
         })
 
     } catch (error) {
+        // TEMP DIAGNOSTIC: log the real underlying failure (non-sensitive). HTTP response is unchanged.
+        console.error("[OTP] requestOtp unhandled error:", JSON.stringify(safeErr(error)))
         return res.status(500).json({message:`request otp error ${error}`})
     }
 }
